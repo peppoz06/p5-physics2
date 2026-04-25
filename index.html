@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <title>Tilt & Shake — 3D Physics Demo</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="ui">
+    <h1>Tilt & Shake</h1>
+    <p id="hint">Tilt or shake your phone to move the balls</p>
+    <div class="controls">
+      <button id="motionBtn">Enable motion controls</button>
+      <div id="status">Motion: <span id="motionState">off</span></div>
+    </div>
+    <div id="credits">Demo — mobile-first 3D physics</div>
+  </div>
+
+  <canvas id="c"></canvas>
+
+  <script type="module" src="main.js"></script>
+</body>
+</html>
