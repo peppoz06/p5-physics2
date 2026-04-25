@@ -17,7 +17,6 @@ window.addEventListener('unhandledrejection', (ev) => {
 });
 
 import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.156.0/build/three.module.js';
-import { OrbitControls } from 'https://cdn.jsdelivr.net/npm/three@0.156.0/examples/jsm/controls/OrbitControls.js';
 import * as CANNON from 'https://cdn.jsdelivr.net/npm/cannon-es@0.20.0/dist/cannon-es.js';
 
 // --- Basic setup ---
@@ -202,11 +201,7 @@ world.defaultContactMaterial = contact;
 // keep spheres constrained inside by slightly larger physics walls already created
 
 // --- Interaction & controls ---
-const controls = new OrbitControls(camera, renderer.domElement);
-controls.enablePan = false;
-controls.enableZoom = false;
-controls.enableDamping = true;
-controls.enabled = false; // desktop fallback off by default
+// We use a lightweight custom pointer drag to avoid importing OrbitControls
 
 let deviceEnabled = false;
 const motionBtn = document.getElementById('motionBtn');
@@ -281,10 +276,31 @@ function handleMotion(e){
 // Desktop fallback: tilt with pointer drag
 let isPointerDown = false;
 let pointerStart = null;
+let lastPointer = null;
 renderer.domElement.addEventListener('pointerdown', e=>{
-  isPointerDown = true; pointerStart = {x:e.clientX, y:e.clientY}; controls.enabled = true;
+  isPointerDown = true;
+  pointerStart = {x:e.clientX, y:e.clientY};
+  lastPointer = {x:e.clientX, y:e.clientY};
 });
-window.addEventListener('pointerup', ()=>{ isPointerDown = false; controls.enabled = false; pointerStart=null });
+window.addEventListener('pointerup', ()=>{ isPointerDown = false; pointerStart = null; lastPointer = null; });
+window.addEventListener('pointercancel', ()=>{ isPointerDown = false; pointerStart = null; lastPointer = null; });
+
+window.addEventListener('pointermove', (e)=>{
+  if(!isPointerDown || !pointerStart) return;
+  const dx = e.clientX - lastPointer.x;
+  const dy = e.clientY - lastPointer.y;
+  lastPointer = {x:e.clientX, y:e.clientY};
+  // small rotation influence
+  cubeGroup.rotation.x += dy * 0.002;
+  cubeGroup.rotation.z += dx * 0.002;
+  // nudge gravity target based on tilt for desktop feel
+  gravityTarget.x += dx * 0.012;
+  gravityTarget.z += dy * 0.012;
+  // clamp gravity target magnitude
+  const maxG = 12;
+  gravityTarget.x = Math.max(-maxG, Math.min(maxG, gravityTarget.x));
+  gravityTarget.z = Math.max(-maxG, Math.min(maxG, gravityTarget.z));
+});
 
 // keyboard optional
 window.addEventListener('keydown', e=>{
