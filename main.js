@@ -96,24 +96,43 @@ world.solver.iterations = 10;
 const cubeSize = 2.2; // half extents considered during visuals
 const wallThickness = 0.12;
 
+// walls will be stored with their local transform relative to the visual cubeGroup.
 const walls = [];
-function makeWall(pos, quat, size){
+function makeWall(localPosThree, localQuatThree, size){
   const shape = new CANNON.Box(new CANNON.Vec3(size.x/2, size.y/2, size.z/2));
   const body = new CANNON.Body({ mass: 0, shape });
-  body.position.copy(pos);
-  body.quaternion.copy(quat);
+  // add to world; we'll update position/quaternion each frame to follow the cube
   world.addBody(body);
-  walls.push(body);
+  walls.push({ body, localPosThree: localPosThree.clone(), localQuatThree: localQuatThree.clone() });
   return body;
 }
 
 // create the 6 walls: left/right/front/back/top/bottom
-makeWall(new CANNON.Vec3( cubeSize/2 + wallThickness/2, 0, 0), new CANNON.Quaternion(), {x: wallThickness, y: cubeSize + wallThickness*2, z: cubeSize + wallThickness*2});
-makeWall(new CANNON.Vec3(-cubeSize/2 - wallThickness/2, 0, 0), new CANNON.Quaternion(), {x: wallThickness, y: cubeSize + wallThickness*2, z: cubeSize + wallThickness*2});
-makeWall(new CANNON.Vec3(0, cubeSize/2 + wallThickness/2, 0), new CANNON.Quaternion(), {x: cubeSize + wallThickness*2, y: wallThickness, z: cubeSize + wallThickness*2});
-makeWall(new CANNON.Vec3(0, -cubeSize/2 - wallThickness/2, 0), new CANNON.Quaternion(), {x: cubeSize + wallThickness*2, y: wallThickness, z: cubeSize + wallThickness*2});
-makeWall(new CANNON.Vec3(0, 0, cubeSize/2 + wallThickness/2), new CANNON.Quaternion(), {x: cubeSize + wallThickness*2, y: cubeSize + wallThickness*2, z: wallThickness});
-makeWall(new CANNON.Vec3(0, 0, -cubeSize/2 - wallThickness/2), new CANNON.Quaternion(), {x: cubeSize + wallThickness*2, y: cubeSize + wallThickness*2, z: wallThickness});
+// create the 6 walls (local positions & quaternions)
+const half = cubeSize/2;
+makeWall(new THREE.Vector3( half + wallThickness/2, 0, 0), new THREE.Quaternion(), {x: wallThickness, y: cubeSize + wallThickness*2, z: cubeSize + wallThickness*2});
+makeWall(new THREE.Vector3(-half - wallThickness/2, 0, 0), new THREE.Quaternion(), {x: wallThickness, y: cubeSize + wallThickness*2, z: cubeSize + wallThickness*2});
+makeWall(new THREE.Vector3(0,  half + wallThickness/2, 0), new THREE.Quaternion(), {x: cubeSize + wallThickness*2, y: wallThickness, z: cubeSize + wallThickness*2});
+makeWall(new THREE.Vector3(0, -half - wallThickness/2, 0), new THREE.Quaternion(), {x: cubeSize + wallThickness*2, y: wallThickness, z: cubeSize + wallThickness*2});
+makeWall(new THREE.Vector3(0, 0,  half + wallThickness/2), new THREE.Quaternion(), {x: cubeSize + wallThickness*2, y: cubeSize + wallThickness*2, z: wallThickness});
+makeWall(new THREE.Vector3(0, 0, -half - wallThickness/2), new THREE.Quaternion(), {x: cubeSize + wallThickness*2, y: cubeSize + wallThickness*2, z: wallThickness});
+
+// helper: update walls to follow cubeGroup's world transform
+function updateWalls(){
+  walls.forEach(w => {
+    // compute world position from cubeGroup local space
+    const worldPos = w.localPosThree.clone();
+    cubeGroup.localToWorld(worldPos);
+    // compute world quaternion
+    const worldQuat = cubeGroup.quaternion.clone().multiply(w.localQuatThree);
+    // apply to cannon body
+    w.body.position.set(worldPos.x, worldPos.y, worldPos.z);
+    w.body.quaternion.set(worldQuat.x, worldQuat.y, worldQuat.z, worldQuat.w);
+    // ensure static bodies wake up
+    w.body.velocity.set(0,0,0);
+    w.body.angularVelocity.set(0,0,0);
+  });
+}
 
 // --- Visual cube (transparent, frosted) ---
 const cubeGroup = new THREE.Group();
@@ -341,6 +360,9 @@ function animate(){
   // smooth gravity
   dampVector(gravityCurrent, gravityTarget, 0.06);
   world.gravity.set(gravityCurrent.x, gravityCurrent.y, gravityCurrent.z);
+
+  // update static wall bodies to follow cube orientation
+  updateWalls();
 
   // step physics
   world.step(1/60, dt, 4);
