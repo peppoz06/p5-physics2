@@ -19,6 +19,13 @@ window.addEventListener('unhandledrejection', (ev) => {
 (function(){
   // --- Basic setup ---
   const canvas = document.getElementById('c');
+  if(typeof CANNON === 'undefined'){
+    const overlay = document.getElementById('errOverlay');
+    const msg = document.getElementById('errMsg');
+    if(msg) msg.textContent = 'CANNON (physics library) did not load. Check your network or try again.';
+    if(overlay) overlay.style.display = 'flex';
+    return;
+  }
 // WebGL availability check
 function webglAvailable(){
   try{
