@@ -48,7 +48,12 @@ renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   const scene = new THREE.Scene();
 
   const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 200);
-  camera.position.set(0, 2.6, 6);
+  // position camera responsively so the cube sits centered on desktop
+  if(window.innerWidth > 900){
+    camera.position.set(0, 0.9, 5.8);
+  } else {
+    camera.position.set(0, 2.6, 6);
+  }
 
 // lights
 const ambient = new THREE.HemisphereLight(0xffffff, 0x444444, 0.7);
@@ -68,7 +73,7 @@ scene.add(dir);
 const pedestalGeo = new THREE.BoxGeometry(4.2, 0.5, 4.2);
 const pedestalMat = new THREE.MeshStandardMaterial({ color: 0xffffff, metalness: 0.0, roughness: 0.45 });
 const pedestal = new THREE.Mesh(pedestalGeo, pedestalMat);
-pedestal.position.set(0, -1.25, 0);
+pedestal.position.set(0, -1.45, 0);
 pedestal.receiveShadow = true;
 scene.add(pedestal);
 
@@ -158,7 +163,8 @@ cubeInner.castShadow = true;
 cubeInner.receiveShadow = true;
 cubeGroup.add(cubeInner);
 
-cubeGroup.position.set(0, 0.2, 0);
+// place the visual cube at the scene center (so it appears centered on desktop)
+cubeGroup.position.set(0, 0, 0);
 scene.add(cubeGroup);
 
 // make sure cubeGroup visually rotates; physics walls are in world space — we'll rotate gravity instead
@@ -345,6 +351,8 @@ function animate(){
     s.mesh.quaternion.copy(s.body.quaternion);
   });
 
+  // keep camera looking at the cube center so it appears centered
+  camera.lookAt(cubeGroup.position);
   // render
   renderer.render(scene, camera);
 
@@ -357,6 +365,12 @@ animate();
 window.addEventListener('resize', ()=>{
   renderer.setSize(window.innerWidth, window.innerHeight);
   camera.aspect = window.innerWidth / window.innerHeight;
+  // adjust camera for desktop/mobile so cube stays centered visually
+  if(window.innerWidth > 900){
+    camera.position.set(0, 0.9, 5.8);
+  } else {
+    camera.position.set(0, 2.6, 6);
+  }
   camera.updateProjectionMatrix();
 });
 
