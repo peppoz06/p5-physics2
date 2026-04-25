@@ -1,11 +1,40 @@
 // main.js — mobile-first 3D physics demo
+// signal module load and handle runtime errors so the page doesn't stay blank
+console.log('main.js loaded');
+window.addEventListener('error', (ev) => {
+  console.error('Runtime error', ev.error || ev.message);
+  const overlay = document.getElementById('errOverlay');
+  const msg = document.getElementById('errMsg');
+  if(msg) msg.textContent = String((ev && (ev.error && ev.error.message)) || ev.message || 'Unknown runtime error');
+  if(overlay) overlay.style.display = 'flex';
+});
+window.addEventListener('unhandledrejection', (ev) => {
+  console.error('Unhandled rejection', ev.reason);
+  const overlay = document.getElementById('errOverlay');
+  const msg = document.getElementById('errMsg');
+  if(msg) msg.textContent = String(ev.reason && ev.reason.message ? ev.reason.message : ev.reason);
+  if(overlay) overlay.style.display = 'flex';
+});
 
-import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.156.0/build/three.module.js';
-import { OrbitControls } from 'https://cdn.jsdelivr.net/npm/three@0.156.0/examples/jsm/controls/OrbitControls.js';
+import * as THREE from 'three';
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import * as CANNON from 'https://cdn.jsdelivr.net/npm/cannon-es@0.20.0/dist/cannon-es.js';
 
 // --- Basic setup ---
 const canvas = document.getElementById('c');
+// WebGL availability check
+function webglAvailable(){
+  try{
+    const gl = canvas.getContext('webgl2') || canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+    return !!gl;
+  }catch(e){ return false; }
+}
+if(!webglAvailable()){
+  const overlay = document.getElementById('errOverlay');
+  const msg = document.getElementById('errMsg');
+  if(msg) msg.textContent = 'WebGL not available or blocked. Try a different browser or enable WebGL.';
+  if(overlay) overlay.style.display = 'flex';
+}
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 renderer.setSize(window.innerWidth, window.innerHeight);

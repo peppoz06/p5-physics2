@@ -19,6 +19,34 @@
 
   <canvas id="c"></canvas>
 
-  <script type="module" src="main.js"></script>
+  <div id="errOverlay" aria-hidden="true">
+    <div id="errBox">
+      <h2>Loading error</h2>
+      <p id="errMsg">If you see this, the demo failed to start. Open the browser console for details.</p>
+      <p>Try serving the folder over HTTP (see README) — some browsers block module imports from local files.</p>
+    </div>
+  </div>
+
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.156.0/build/three.module.js",
+      "three/": "https://cdn.jsdelivr.net/npm/three@0.156.0/"
+    }
+  }
+  </script>
+
+  <script type="module">
+    // dynamic import so we can catch and show errors on-screen
+    try{
+      await import('./main.js');
+    }catch(err){
+      console.error('Failed to load main.js', err);
+      const overlay = document.getElementById('errOverlay');
+      const msg = document.getElementById('errMsg');
+      if(msg) msg.textContent = String(err.message || err);
+      if(overlay) overlay.style.display = 'flex';
+    }
+  </script>
 </body>
 </html>
