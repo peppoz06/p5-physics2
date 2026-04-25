@@ -74,8 +74,9 @@ ground.position.y = -1.5;
 ground.receiveShadow = true;
 scene.add(ground);
 
-// --- Physics world ---
-const world = new CANNON.World({ gravity: new CANNON.Vec3(0, -9.82, 0) });
+// --- Physics world (using global CANNON UMD) ---
+const world = new CANNON.World();
+world.gravity.set(0, -9.82, 0);
 world.broadphase = new CANNON.NaiveBroadphase();
 world.solver.iterations = 10;
 
@@ -191,9 +192,10 @@ function createBall(radius=0.18){
 
 for(let i=0;i<sphereCount;i++) createBall(0.18 + Math.random()*0.06);
 
-// collisions tuning using contact materials
+// collisions tuning using contact materials (CANNON.ContactMaterial)
 const defaultMat = new CANNON.Material('default');
 const contact = new CANNON.ContactMaterial(defaultMat, defaultMat, { friction: 0.02, restitution: 0.78 });
+world.addContactMaterial(contact);
 world.defaultContactMaterial = contact;
 
 // keep spheres constrained inside by slightly larger physics walls already created
