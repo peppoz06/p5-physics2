@@ -28,18 +28,23 @@
   </div>
 
   
-  <script type="module">
-    // dynamic import so we can catch and show errors on-screen
-    try{
-      // cache-bust to avoid loading stale cached modules
-      await import('./main.js?t=' + Date.now());
-    }catch(err){
-      console.error('Failed to load main.js', err);
+  <!-- UMD builds to avoid module resolution issues on some hosts/browsers -->
+  <script src="https://cdn.jsdelivr.net/npm/three@0.156.0/build/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/cannon-es@0.20.0/dist/cannon-es.js"></script>
+  <script>
+    // load main.js as a classic script and show overlay on error
+    function showError(err){
+      console.error(err);
       const overlay = document.getElementById('errOverlay');
       const msg = document.getElementById('errMsg');
-      if(msg) msg.textContent = String(err.message || err);
+      if(msg) msg.textContent = String(err && (err.message || err) || 'Unknown error');
       if(overlay) overlay.style.display = 'flex';
     }
+    const s = document.createElement('script');
+    s.src = './main.js?t=' + Date.now();
+    s.onload = () => console.log('main.js loaded (classic)');
+    s.onerror = (e) => showError('Failed to load main.js');
+    document.body.appendChild(s);
   </script>
 </body>
 </html>

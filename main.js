@@ -15,12 +15,10 @@ window.addEventListener('unhandledrejection', (ev) => {
   if(msg) msg.textContent = String(ev.reason && ev.reason.message ? ev.reason.message : ev.reason);
   if(overlay) overlay.style.display = 'flex';
 });
-
-import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.156.0/build/three.module.js';
-import * as CANNON from 'https://cdn.jsdelivr.net/npm/cannon-es@0.20.0/dist/cannon-es.js';
-
-// --- Basic setup ---
-const canvas = document.getElementById('c');
+// main.js now expects global THREE and CANNON from UMD bundles
+(function(){
+  // --- Basic setup ---
+  const canvas = document.getElementById('c');
 // WebGL availability check
 function webglAvailable(){
   try{
@@ -34,16 +32,16 @@ if(!webglAvailable()){
   if(msg) msg.textContent = 'WebGL not available or blocked. Try a different browser or enable WebGL.';
   if(overlay) overlay.style.display = 'flex';
 }
-const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
-const scene = new THREE.Scene();
+  const scene = new THREE.Scene();
 
-const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 200);
-camera.position.set(0, 2.6, 6);
+  const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 200);
+  camera.position.set(0, 2.6, 6);
 
 // lights
 const ambient = new THREE.HemisphereLight(0xffffff, 0x444444, 0.7);
@@ -339,7 +337,6 @@ function animate(){
   });
 
   // render
-  controls.update();
   renderer.render(scene, camera);
 
   requestAnimationFrame(animate);
@@ -380,3 +377,4 @@ setInterval(correctSpheres, 500);
 
 // expose for debugging (optional)
 window._demo = { scene, world, spheres };
+})();
