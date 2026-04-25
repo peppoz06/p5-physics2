@@ -31,7 +31,8 @@
   <script type="module">
     // dynamic import so we can catch and show errors on-screen
     try{
-      await import('./main.js');
+      // cache-bust to avoid loading stale cached modules
+      await import('./main.js?t=' + Date.now());
     }catch(err){
       console.error('Failed to load main.js', err);
       const overlay = document.getElementById('errOverlay');
